@@ -4,6 +4,14 @@
 
 export const environment = {
   production: false,
+  firebase: {
+    apiKey: 'AIzaSyC0WSgXtJ-Sdxhd1WKIakJDPMamBFnccbg',
+    authDomain: 'buy-and-sell-debfa.firebaseapp.com',
+    projectId: 'buy-and-sell-debfa',
+    storageBucket: 'buy-and-sell-debfa.appspot.com',
+    messagingSenderId: '947116140672',
+    appId: '1:947116140672:web:c962e17a360dc4f260de65',
+  },
 };
 
 /*
