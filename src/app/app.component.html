@@ -1,5 +1,5 @@
 <div id="page-wrap">
-  <div class="max-width-column" *ngIf="auth.user | async">
+  <div class="max-width-column" *ngIf="auth.isAuthenticated$ | async">
     <app-nav-bar></app-nav-bar>
     <div id="content-wrap">
       <router-outlet></router-outlet>
@@ -7,7 +7,10 @@
     <button (click)="signOutClicked()">Sign Out</button>
   </div>
 
-  <div class="max-width-column" *ngIf="(auth.user | async) === null">
+  <div
+    class="max-width-column"
+    *ngIf="(auth.isAuthenticated$ | async) === false"
+  >
     <h3>You need to sign first</h3>
     <button (click)="singInClicked()">Sign In with Google</button>
   </div>

@@ -2,25 +2,24 @@ import { Injectable } from '@angular/core';
 import { Listing } from './types';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AngularFireAuth } from '@angular/fire/compat/auth';
+import { AuthService } from './auth.service';
 
-const httpOptions = {
+const httpHeaders = {
   headers: new HttpHeaders({
     'Content-Type': 'application/json',
   }),
 };
-const httpOptionsWithAuthToken = (token: string) => ({
-  headers: new HttpHeaders({
-    'Content-Type': 'application/json',
-    AuthToken: token,
-  }),
-});
+
+const httpOptionsWithCredentials = {
+  ...httpHeaders,
+  withCredentials: true,
+};
 
 @Injectable({
   providedIn: 'root',
 })
 export class ListingsService {
-  constructor(private http: HttpClient, private auth: AngularFireAuth) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
   getListings(): Observable<Listing[]> {
     return this.http.get<Listing[]>('/api/listings');
@@ -34,43 +33,21 @@ export class ListingsService {
     return this.http.post<Listing>(
       `/api/listings/${id}/add-view`,
       {},
-      httpOptions
+      httpHeaders
     );
   }
 
   getListingsForUser(): Observable<Listing[]> {
-    return new Observable<Listing[]>((observer) => {
-      this.auth.user.subscribe((user) => {
-        user &&
-          user.getIdToken().then((token) => {
-            if (user && token) {
-              this.http
-                .get<Listing[]>(
-                  `/api/users/${user.uid}/listings`,
-                  httpOptionsWithAuthToken(token)
-                )
-                .subscribe((listings) => observer.next(listings));
-            } else {
-              observer.next([]);
-            }
-          });
-      });
-    });
+    const userId = this.auth.userId!;
+
+    return this.http.get<Listing[]>(
+      `/api/users/${userId}/listings`,
+      httpOptionsWithCredentials
+    );
   }
 
   deleteListing(id: string): Observable<any> {
-    return new Observable<any>((observer) => {
-      this.auth.user.subscribe((user) => {
-        user &&
-          user.getIdToken().then((token) => {
-            if (user && token) {
-              this.http
-                .delete(`/api/listings/${id}`, httpOptionsWithAuthToken(token))
-                .subscribe(() => observer.next());
-            }
-          });
-      });
-    });
+    return this.http.delete(`/api/listings/${id}`, httpOptionsWithCredentials);
   }
 
   createListing(
@@ -78,26 +55,15 @@ export class ListingsService {
     description: string,
     price: number
   ): Observable<Listing> {
-    return new Observable<Listing>((observer) => {
-      this.auth.user.subscribe((user) => {
-        user &&
-          user.getIdToken().then((token) => {
-            if (user && token) {
-              this.http
-                .post<Listing>(
-                  '/api/listings',
-                  {
-                    name,
-                    description,
-                    price,
-                  },
-                  httpOptionsWithAuthToken(token)
-                )
-                .subscribe((listing) => observer.next(listing));
-            }
-          });
-      });
-    });
+    return this.http.post<Listing>(
+      '/api/listings',
+      {
+        name,
+        description,
+        price,
+      },
+      httpOptionsWithCredentials
+    );
   }
 
   editListings(
@@ -106,23 +72,14 @@ export class ListingsService {
     description: string,
     price: number
   ): Observable<Listing> {
-    return new Observable((observer) => {
-      this.auth.user.subscribe((user) => {
-        user &&
-          user.getIdToken().then((token) => {
-            this.http
-              .post<Listing>(
-                `/api/listings/${id}`,
-                {
-                  name,
-                  description,
-                  price,
-                },
-                httpOptionsWithAuthToken(token)
-              )
-              .subscribe((listing) => observer.next(listing));
-          });
-      });
-    });
+    return this.http.post<Listing>(
+      `/api/listings/${id}`,
+      {
+        name,
+        description,
+        price,
+      },
+      httpOptionsWithCredentials
+    );
   }
 }
