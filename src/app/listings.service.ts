@@ -45,7 +45,10 @@ export class ListingsService {
           user.getIdToken().then((token) => {
             if (user && token) {
               this.http
-                .get<Listing[]>(`/api/users/${user.uid}/listings`)
+                .get<Listing[]>(
+                  `/api/users/${user.uid}/listings`,
+                  httpOptionsWithAuthToken(token)
+                )
                 .subscribe((listings) => observer.next(listings));
             } else {
               observer.next([]);
@@ -56,7 +59,18 @@ export class ListingsService {
   }
 
   deleteListing(id: string): Observable<any> {
-    return this.http.delete(`/api/listings/${id}`);
+    return new Observable<any>((observer) => {
+      this.auth.user.subscribe((user) => {
+        user &&
+          user.getIdToken().then((token) => {
+            if (user && token) {
+              this.http
+                .delete(`/api/listings/${id}`, httpOptionsWithAuthToken(token))
+                .subscribe(() => observer.next());
+            }
+          });
+      });
+    });
   }
 
   createListing(
@@ -64,15 +78,26 @@ export class ListingsService {
     description: string,
     price: number
   ): Observable<Listing> {
-    return this.http.post<Listing>(
-      '/api/listings',
-      {
-        name,
-        description,
-        price,
-      },
-      httpOptions
-    );
+    return new Observable<Listing>((observer) => {
+      this.auth.user.subscribe((user) => {
+        user &&
+          user.getIdToken().then((token) => {
+            if (user && token) {
+              this.http
+                .post<Listing>(
+                  '/api/listings',
+                  {
+                    name,
+                    description,
+                    price,
+                  },
+                  httpOptionsWithAuthToken(token)
+                )
+                .subscribe((listing) => observer.next(listing));
+            }
+          });
+      });
+    });
   }
 
   editListings(
@@ -81,14 +106,23 @@ export class ListingsService {
     description: string,
     price: number
   ): Observable<Listing> {
-    return this.http.post<Listing>(
-      `/api/listings/${id}`,
-      {
-        name,
-        description,
-        price,
-      },
-      httpOptions
-    );
+    return new Observable((observer) => {
+      this.auth.user.subscribe((user) => {
+        user &&
+          user.getIdToken().then((token) => {
+            this.http
+              .post<Listing>(
+                `/api/listings/${id}`,
+                {
+                  name,
+                  description,
+                  price,
+                },
+                httpOptionsWithAuthToken(token)
+              )
+              .subscribe((listing) => observer.next(listing));
+          });
+      });
+    });
   }
 }
